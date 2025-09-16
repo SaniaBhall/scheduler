@@ -1,0 +1,177 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Scheduler</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs/%3E%3Crect width='32' height='32' rx='8' fill='%235b7cfa'/%3E%3Cpath d='M9 8h14a1 1 0 011 1v14a1 1 0 01-1 1H9a1 1 0 01-1-1V9a1 1 0 011-1zm2 5h10M11 20h6' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||'day';}catch(e){}</script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left app-brand" aria-label="Daily Scheduler">
+      <span class="app-logo" aria-hidden="true">
+        <svg class="app-mark" viewBox="0 0 32 32" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#8b5cf6"/>
+              <stop offset="100%" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="4" width="28" height="26" rx="6" fill="url(#g1)"/>
+          <path d="M8 10h16M10 16h7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="21" cy="19" r="5" fill="rgba(255,255,255,.15)" stroke="#fff" stroke-width="1.5"/>
+          <path d="M21 16v3.2l2 1.3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="topbar-title app-name">Daily Scheduler</span>
+    </div>
+    <div class="topbar-right"></div>
+  </header>
+
+  <main class="container" aria-labelledby="app-title">
+    <h1 id="app-title" class="visually-hidden">Daily Scheduler</h1>
+
+    <section class="hero card" aria-labelledby="hero-title">
+      <div class="hero-left">
+        <div class="day-banner" aria-live="polite"><span id="day-friendly">Today</span></div>
+        <h2 id="hero-title">Make Today Count</h2>
+        <p class="subtle">Design your day. Focus on what matters. Start strong, finish proud.</p>
+      </div>
+      <div class="hero-right">
+        <div class="progress" aria-label="Today's completion" role="group">
+          <div class="progress-ring">
+            <svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
+              <circle class="ring-bg" cx="60" cy="60" r="52" />
+              <circle id="ring-fg" class="ring-fg" cx="60" cy="60" r="52" />
+            </svg>
+            <div class="progress-text" aria-live="polite">
+              <span id="progress-num">0</span>
+              <span class="progress-denom">/ <span id="progress-den">0</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="main-grid">
+      <section id="add-card" class="card" aria-labelledby="add-title">
+        <h2 id="add-title" class="section-title">Add Task</h2>
+        <form id="task-form" class="task-form" novalidate>
+          <div class="field">
+            <label for="title" class="label">Title</label>
+            <input id="title" name="title" type="text" required minlength="1" maxlength="120" placeholder="e.g., Team meeting" autocomplete="off" />
+            <div id="title-error" class="field-error" aria-live="polite"></div>
+          </div>
+          <div class="field two-col">
+            <div>
+              <label for="start" class="label">Start</label>
+              <input id="start" name="start" type="time" required placeholder="(HH:MM)" title="Type HH:MM or use the picker" step="60" />
+              <div id="start-error" class="field-error" aria-live="polite"></div>
+            </div>
+            <div>
+              <label for="end" class="label">End</label>
+              <input id="end" name="end" type="time" required placeholder="(HH:MM)" title="Type HH:MM or use the picker" step="60" />
+              <div id="end-error" class="field-error" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="notes" class="label">Notes (optional)</label>
+            <textarea id="notes" name="notes" rows="2" maxlength="300" placeholder="Details, location, goals..."></textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary">Add</button>
+            <button id="btn-clear" type="button" class="btn">Clear</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="list-title">
+        <div class="list-header">
+          <h2 id="list-title" class="section-title">Today's Tasks</h2>
+          <div class="list-controls">
+            <div class="filters" role="group" aria-label="Show">
+              <button id="filter-all" class="chip-btn active" type="button" aria-pressed="true">All</button>
+              <button id="filter-active" class="chip-btn" type="button" aria-pressed="false">Active</button>
+              <button id="filter-completed" class="chip-btn" type="button" aria-pressed="false">Completed</button>
+            </div>
+            <button id="mark-all-done" class="btn btn-shine" type="button">Complete All</button>
+          </div>
+        </div>
+        <div id="active-sub" class="list-sub">
+          <h3 class="sub-title">Upcoming & Active</h3>
+          <div id="empty-active" class="empty-state" role="status">No active tasks for today.</div>
+          <ul id="task-list-active" class="task-list" role="list" aria-live="polite"></ul>
+        </div>
+        <div id="completed-sub" class="list-sub glow-section">
+          <h3 class="sub-title">Completed</h3>
+          <div id="empty-completed" class="empty-state" role="status">No completed tasks yet.</div>
+          <ul id="task-list-completed" class="task-list task-list--completed" role="list" aria-live="polite"></ul>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="history-title" id="history-section">
+        <div class="list-header">
+          <h2 id="history-title" class="section-title">History</h2>
+          <div class="list-controls">
+            <label for="history-range" class="visually-hidden">Range</label>
+            <select id="history-range" aria-label="History range">
+              <option value="7" selected>Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+        <div id="history-empty" class="empty-state" role="status">No past tasks yet.</div>
+        <div id="history-list" class="history-groups" role="list"></div>
+      </section>
+    </div>
+
+    <!-- Generic prompt dialog for confirm/reschedule -->
+    <div id="prompt" class="dialog" role="dialog" aria-modal="true" aria-labelledby="prompt-title" hidden>
+      <div class="dialog-card">
+        <h3 id="prompt-title">Confirm</h3>
+        <div id="prompt-body" class="prompt-body"></div>
+        <div class="dialog-actions">
+          <button id="prompt-confirm" class="btn primary" type="button">Confirm</button>
+          <button id="prompt-cancel" class="btn" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <section id="achievement" class="achievement" hidden aria-live="polite" aria-label="All tasks completed">
+      <div class="ach-card">
+        <div class="trophy" aria-hidden="true" title="All tasks complete!">🏆</div>
+        <h2>All tasks complete!</h2>
+        <p>Fantastic work. You nailed your day.</p>
+        <button id="close-achievement" class="btn" type="button" aria-label="Close achievement">Close</button>
+      </div>
+      <div id="confetti" aria-hidden="true"></div>
+    </section>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+      <div id="toast-msg"></div>
+      <div class="toast-actions">
+        <button id="toast-act-1" class="btn btn-small" type="button" hidden></button>
+        <button id="toast-act-2" class="btn btn-small" type="button" hidden></button>
+      </div>
+    </div>
+
+    <div id="dialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden>
+      <div class="dialog-card">
+        <h3 id="dialog-title">Task finished</h3>
+        <p id="dialog-desc" class="subtle"></p>
+        <div class="dialog-actions">
+          <button id="dlg-done" class="btn primary" type="button">Mark done</button>
+          <button id="dlg-resched" class="btn" type="button">Reschedule</button>
+          <button id="dlg-snooze" class="btn" type="button">Snooze 10m</button>
+          <button id="dlg-cancel" class="btn danger" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
