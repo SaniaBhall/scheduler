@@ -1,7 +1,7 @@
 ﻿name: Deploy static site to Pages
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feat-initial" ]
   workflow_dispatch:
 permissions:
   contents: read
