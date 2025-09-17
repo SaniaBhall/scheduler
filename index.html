@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -59,6 +59,16 @@
       <section id="add-card" class="card" aria-labelledby="add-title">
         <h2 id="add-title" class="section-title">Add Task</h2>
         <form id="task-form" class="task-form" novalidate>
+          <div class="field two-col">
+            <div>
+              <label for="day-from" class="label">Date From</label>
+              <input id="day-from" name="dayFrom" type="date" />
+            </div>
+            <div>
+              <label for="day-to" class="label">Date To</label>
+              <input id="day-to" name="dayTo" type="date" />
+            </div>
+          </div>
           <div class="field">
             <label for="title" class="label">Title</label>
             <input id="title" name="title" type="text" required minlength="1" maxlength="120" placeholder="e.g., Team meeting" autocomplete="off" />
@@ -82,14 +92,53 @@
           </div>
           <div class="actions">
             <button type="submit" class="btn primary">Add</button>
-            <button id="btn-clear" type="button" class="btn">Clear</button>
+            <button id="btn-cancel" type="button" class="btn danger">Cancel</button>
           </div>
         </form>
+      </section>
+      <section id="calendar-card" class="card" aria-labelledby="cal-title">
+        <div class="list-header">
+          <h2 id="cal-title" class="section-title">Calendar</h2>
+          <div class="list-controls" style="gap:12px">
+            <div id="cal-label" class="subtle" aria-live="polite"></div>
+            <div class="cal-controls" role="group" aria-label="Calendar controls">
+              <div class="seg cal-nav" role="group" aria-label="Navigate">
+                <button id="cal-prev" class="seg-btn" type="button" aria-label="Previous">&lsaquo;</button>
+                <button id="cal-today" class="seg-btn" type="button">Today</button>
+                <button id="cal-next" class="seg-btn" type="button" aria-label="Next">&rsaquo;</button>
+              </div>
+            </div>
+          </div>
+          <div class="cal-view-wrap">
+            <label for="cal-view" class="visually-hidden">View</label>
+            <select id="cal-view" class="btn btn-small cal-select" aria-label="Calendar view">
+              <option value="week">Week</option>
+              <option value="month" selected>Month</option>
+              <option value="year">Year</option>
+            </select>
+          </div>
+        </div>
+        <div id="calendar" class="calendar" role="grid"></div>
+      </section>
+      <section class="card" aria-labelledby="history-title" id="history-section">
+        <div class="list-header">
+          <h2 id="history-title" class="section-title">History</h2>
+          <div class="list-controls" style="gap:12px">
+            <label for="history-range" class="visually-hidden">Range</label>
+            <select id="history-range" aria-label="History range">
+              <option value="7" selected>Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+        <div id="history-empty" class="empty-state" role="status">No past tasks yet.</div>
+        <div id="history-list" class="history-groups" role="list"></div>
       </section>
 
       <section class="card" aria-labelledby="list-title">
         <div class="list-header">
-          <h2 id="list-title" class="section-title">Today's Tasks</h2>
+          <h2 id="list-title" class="section-title">Tasks</h2>
           <div class="list-controls">
             <div class="filters" role="group" aria-label="Show">
               <button id="filter-all" class="chip-btn active" type="button" aria-pressed="true">All</button>
@@ -110,22 +159,6 @@
           <ul id="task-list-completed" class="task-list task-list--completed" role="list" aria-live="polite"></ul>
         </div>
       </section>
-
-      <section class="card" aria-labelledby="history-title" id="history-section">
-        <div class="list-header">
-          <h2 id="history-title" class="section-title">History</h2>
-          <div class="list-controls">
-            <label for="history-range" class="visually-hidden">Range</label>
-            <select id="history-range" aria-label="History range">
-              <option value="7" selected>Last 7 days</option>
-              <option value="30">Last 30 days</option>
-              <option value="all">All</option>
-            </select>
-          </div>
-        </div>
-        <div id="history-empty" class="empty-state" role="status">No past tasks yet.</div>
-        <div id="history-list" class="history-groups" role="list"></div>
-      </section>
     </div>
 
     <!-- Generic prompt dialog for confirm/reschedule -->
@@ -142,7 +175,7 @@
 
     <section id="achievement" class="achievement" hidden aria-live="polite" aria-label="All tasks completed">
       <div class="ach-card">
-        <div class="trophy" aria-hidden="true" title="All tasks complete!">🏆</div>
+        <div class="trophy" aria-hidden="true" title="All tasks complete!">??</div>
         <h2>All tasks complete!</h2>
         <p>Fantastic work. You nailed your day.</p>
         <button id="close-achievement" class="btn" type="button" aria-label="Close achievement">Close</button>
