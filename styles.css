@@ -230,3 +230,27 @@ body{
 /* Kebab menu: fit to content and prevent viewport fill */
 .menu{ right:auto; left:auto; top:auto; bottom:auto; position:fixed; width:max-content; min-width:unset; max-width:min(240px, 90vw); white-space:nowrap; }
 .menu.open-up{ bottom:auto; }
+
+/* Calendar -------------------------------------------------------------- */
+.calendar{margin-top:10px}
+.cal-month{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-weekday{font-size:.8rem;color:var(--app-muted);text-align:center;padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-cell{position:relative;appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
+  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);border-radius:10px;padding:8px 10px;text-align:right;cursor:pointer;min-height:44px}
+.cal-cell:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+.cal-cell.is-outside{opacity:.55}
+.cal-cell.is-today{outline:2px solid color-mix(in oklab, var(--app-primary), transparent 40%)}
+.cal-cell.is-selected{border-color:color-mix(in oklab, var(--app-primary), transparent 35%);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.cal-cell .cal-num{font-weight:600}
+.cal-cell.has-tasks::after{content:"";position:absolute;left:10px;bottom:8px;width:8px;height:8px;border-radius:50%;background:var(--app-primary)}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{position:relative;appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
+  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);border-radius:10px;padding:10px;cursor:pointer;text-align:center}
+.cal-day:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+.cal-day.is-today{outline:2px solid color-mix(in oklab, var(--app-primary), transparent 40%)}
+.cal-day.is-selected{border-color:color-mix(in oklab, var(--app-primary), transparent 35%);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.cal-year{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cal-month-btn{appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
+  border-radius:12px;padding:14px;cursor:pointer;text-align:center}
+.cal-month-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}

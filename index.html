@@ -86,6 +86,41 @@
           </div>
         </form>
       </section>
+      <section id="calendar-card" class="card" aria-labelledby="cal-title">
+        <div class="list-header">
+          <h2 id="cal-title" class="section-title">Calendar</h2>
+          <div class="list-controls" style="gap:8px">
+            <div id="cal-label" class="subtle" aria-live="polite"></div>
+            <div class="cal-controls" role="group" aria-label="Calendar controls">
+              <button id="cal-prev" class="icon-btn" type="button" aria-label="Previous">⟨</button>
+              <button id="cal-today" class="btn btn-small" type="button">Today</button>
+              <button id="cal-next" class="icon-btn" type="button" aria-label="Next">⟩</button>
+              <label for="cal-view" class="visually-hidden">View</label>
+              <select id="cal-view" aria-label="Calendar view">
+                <option value="week">Week</option>
+                <option value="month" selected>Month</option>
+                <option value="year">Year</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="calendar" class="calendar" role="grid"></div>
+      </section>
+      <section class="card" aria-labelledby="history-title" id="history-section">
+        <div class="list-header">
+          <h2 id="history-title" class="section-title">History</h2>
+          <div class="list-controls">
+            <label for="history-range" class="visually-hidden">Range</label>
+            <select id="history-range" aria-label="History range">
+              <option value="7" selected>Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+        <div id="history-empty" class="empty-state" role="status">No past tasks yet.</div>
+        <div id="history-list" class="history-groups" role="list"></div>
+      </section>
 
       <section class="card" aria-labelledby="list-title">
         <div class="list-header">
@@ -109,22 +144,6 @@
           <div id="empty-completed" class="empty-state" role="status">No completed tasks yet.</div>
           <ul id="task-list-completed" class="task-list task-list--completed" role="list" aria-live="polite"></ul>
         </div>
-      </section>
-
-      <section class="card" aria-labelledby="history-title" id="history-section">
-        <div class="list-header">
-          <h2 id="history-title" class="section-title">History</h2>
-          <div class="list-controls">
-            <label for="history-range" class="visually-hidden">Range</label>
-            <select id="history-range" aria-label="History range">
-              <option value="7" selected>Last 7 days</option>
-              <option value="30">Last 30 days</option>
-              <option value="all">All</option>
-            </select>
-          </div>
-        </div>
-        <div id="history-empty" class="empty-state" role="status">No past tasks yet.</div>
-        <div id="history-list" class="history-groups" role="list"></div>
       </section>
     </div>
 

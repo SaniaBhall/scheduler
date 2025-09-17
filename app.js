@@ -53,6 +53,7 @@
   }
   function msToTime(ms){ const d=new Date(ms); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function dateToDay(dt){ return dt.getFullYear()+ '-' + pad2(dt.getMonth()+1) + '-' + pad2(dt.getDate()); }
 
 
   function isHourString(s){
@@ -88,6 +89,13 @@
   const elProgNum = $('#progress-num');
   const elProgDen = $('#progress-den');
   const elAddCard = $('#add-card');
+  // Calendar
+  const elCalendar = $('#calendar');
+  const elCalLabel = $('#cal-label');
+  const btnCalPrev = $('#cal-prev');
+  const btnCalNext = $('#cal-next');
+  const btnCalToday = $('#cal-today');
+  const selCalView = $('#cal-view');
   // History
   const elHistList = $('#history-list');
   const elHistEmpty = $('#history-empty');
@@ -222,22 +230,7 @@ btnDlgDone.focus();
       const title = document.createElement('div'); title.className='task-title'; title.textContent = t.title;
       const notes = document.createElement('div'); notes.className='task-notes'; if (t.notes) { notes.textContent = t.notes; } else { notes.textContent=''; }
       mid.appendChild(title); if (t.notes) mid.appendChild(notes);
-
-      const right = document.createElement('div'); right.className='task-actions';
-      // More (kebab) menu
-      const moreWrap = document.createElement('div'); moreWrap.className='more';
-      const moreBtn = document.createElement('button'); moreBtn.className='icon-btn more-btn'; moreBtn.setAttribute('aria-haspopup','menu'); moreBtn.setAttribute('aria-expanded','false'); moreBtn.setAttribute('aria-label','Open menu'); moreBtn.textContent = '...';
-          const menu = document.createElement('div'); menu.className='menu'; menu.setAttribute('role','menu'); menu.hidden = true;
-          // Build menu items
-          const add = (label, onClick) => { const b = document.createElement('button'); b.type='button'; b.className='menu-item'; b.setAttribute('role','menuitem'); b.textContent = label; b.addEventListener('click', (ev)=>{ ev.stopPropagation(); onClick(); closeMenu(menu, moreBtn); }); menu.appendChild(b); };
-          if (t.status==='pending') add('Mark done', ()=> markDone(t.id)); else add('Reopen', ()=> markPending(t.id));
-          add('Edit', ()=> editTask(t.id));
-          add('Reschedule', ()=> reschedTask(t.id));
-          add('Delete', ()=> delTask(t.id));
-        moreWrap.append(moreBtn, menu);
-      right.appendChild(moreWrap);
-
-      li.append(time, mid, right);
+      li.append(time, mid);
       elListAct.appendChild(li);
     }
 
@@ -250,20 +243,7 @@ btnDlgDone.focus();
       const title = document.createElement('div'); title.className='task-title'; title.textContent = t.title;
       const notes = document.createElement('div'); notes.className='task-notes'; if (t.notes) notes.textContent = t.notes;
       mid.appendChild(title); if (t.notes) mid.appendChild(notes);
-      const right = document.createElement('div'); right.className='task-actions';
-      // Only kebab menu with Reopen/Edit/Reschedule/Delete
-      const moreWrap = document.createElement('div'); moreWrap.className='more';
-      const moreBtn = document.createElement('button'); moreBtn.className='icon-btn more-btn'; moreBtn.setAttribute('aria-haspopup','menu'); moreBtn.setAttribute('aria-expanded','false'); moreBtn.setAttribute('aria-label','Open menu'); moreBtn.textContent = '...';
-        const menu = document.createElement('div'); menu.className='menu'; menu.setAttribute('role','menu'); menu.hidden = true;
-          // Build menu items
-          const add = (label, onClick) => { const b = document.createElement('button'); b.type='button'; b.className='menu-item'; b.setAttribute('role','menuitem'); b.textContent = label; b.addEventListener('click', (ev)=>{ ev.stopPropagation(); onClick(); closeMenu(menu, moreBtn); }); menu.appendChild(b); };
-          if (t.status==='pending') add('Mark done', ()=> markDone(t.id)); else add('Reopen', ()=> markPending(t.id));
-          add('Edit', ()=> editTask(t.id));
-          add('Reschedule', ()=> reschedTask(t.id));
-          add('Delete', ()=> delTask(t.id));
-        moreWrap.append(moreBtn, menu);
-      right.appendChild(moreWrap);
-      li.append(time, mid, right);
+      li.append(time, mid);
       elListDone.appendChild(li);
     }
 
@@ -566,7 +546,7 @@ elForm.addEventListener('submit', (e) => {
   });
 
   // Init ---------------------------------------------------------------------
-function initDay(){
+  function initDay(){
     selectedDay = todayStr();
     if (elDay) elDay.value = selectedDay;
   }
@@ -592,6 +572,119 @@ function initDay(){
       }
     }
   }, 30000);
+
+  // Calendar rendering -------------------------------------------------------
+  let calView = (selCalView?.value) || 'month';
+  let calAnchor = dayToDate(selectedDay || todayStr());
+
+  function startOfWeek(d){
+    // Monday as start of week
+    const day = d.getDay(); // 0 Sun .. 6 Sat
+    const diff = (day === 0 ? -6 : 1) - day; // move back to Monday
+    const nd = new Date(d); nd.setDate(d.getDate() + diff); nd.setHours(0,0,0,0); return nd;
+  }
+  function renderCalendar(){
+    if (!elCalendar) return;
+    calView = selCalView?.value || calView || 'month';
+    const sel = selectedDay || todayStr();
+    const today = todayStr();
+    const label = (()=>{
+      if (calView==='year') return String(calAnchor.getFullYear());
+      if (calView==='week') {
+        const s = startOfWeek(calAnchor);
+        const e = new Date(s); e.setDate(s.getDate()+6);
+        const fmt = (dt)=> dt.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+        return `Week of ${fmt(s)} – ${fmt(e)} ${e.getFullYear()}`;
+      }
+      return calAnchor.toLocaleDateString(undefined, { month:'long', year:'numeric' });
+    })();
+    if (elCalLabel) elCalLabel.textContent = label;
+
+    elCalendar.innerHTML='';
+    if (calView==='year') return renderYear();
+    if (calView==='week') return renderWeek();
+    return renderMonth();
+  }
+
+  function renderMonth(){
+    const y = calAnchor.getFullYear();
+    const m = calAnchor.getMonth();
+    const first = new Date(y, m, 1);
+    const last = new Date(y, m+1, 0);
+    const startIdx = (first.getDay()+6)%7 + 1; // Monday=1..Sunday=7
+    const totalCells = Math.ceil((startIdx-1 + last.getDate())/7)*7;
+    const wrap = document.createElement('div'); wrap.className='cal-month';
+    const daysRow = document.createElement('div'); daysRow.className='cal-month';
+    // Weekday headers (Mon..Sun)
+    const names = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const head = document.createElement('div'); head.className='cal-month'; head.style.marginBottom='6px';
+    for(const n of names){ const d=document.createElement('div'); d.className='cal-weekday'; d.textContent=n; head.appendChild(d); }
+    elCalendar.appendChild(head);
+    const grid = document.createElement('div'); grid.className='cal-grid';
+    for(let i=0;i<totalCells;i++){
+      const idx = i - (startIdx-1) + 1; // day number for current month
+      let dt = new Date(y, m, idx);
+      let outside = false;
+      if (idx < 1){ dt = new Date(y, m, idx); outside = true; }
+      else if (idx > last.getDate()){ dt = new Date(y, m, idx); outside = true; }
+      const dayStr = dateToDay(dt);
+      const btn = document.createElement('button'); btn.type='button'; btn.className='cal-cell'; btn.setAttribute('data-day', dayStr);
+      if (outside) btn.classList.add('is-outside');
+      if (dayStr === todayStr()) btn.classList.add('is-today');
+      if (dayStr === (selectedDay||'')) btn.classList.add('is-selected');
+      const hasTasks = state.tasks.some(t=>t.day===dayStr);
+      if (hasTasks) btn.classList.add('has-tasks');
+      const num = document.createElement('div'); num.className='cal-num'; num.textContent= String(dt.getDate()); btn.appendChild(num);
+      btn.addEventListener('click', ()=>{ selectedDay = dayStr; calAnchor = dt; updateDayBanner(); render(); renderCalendar(); });
+      grid.appendChild(btn);
+    }
+    elCalendar.appendChild(grid);
+  }
+
+  function renderWeek(){
+    const start = startOfWeek(calAnchor);
+    const grid = document.createElement('div'); grid.className='cal-week';
+    for(let i=0;i<7;i++){
+      const dt = new Date(start); dt.setDate(start.getDate()+i);
+      const dayStr = dateToDay(dt);
+      const btn = document.createElement('button'); btn.type='button'; btn.className='cal-day'; btn.setAttribute('data-day', dayStr);
+      if (dayStr === todayStr()) btn.classList.add('is-today');
+      if (dayStr === (selectedDay||'')) btn.classList.add('is-selected');
+      const label = dt.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+      btn.textContent = label;
+      btn.addEventListener('click', ()=>{ selectedDay = dayStr; calAnchor = dt; updateDayBanner(); render(); renderCalendar(); });
+      grid.appendChild(btn);
+    }
+    elCalendar.appendChild(grid);
+  }
+
+  function renderYear(){
+    const grid = document.createElement('div'); grid.className='cal-year';
+    for(let i=0;i<12;i++){
+      const dt = new Date(calAnchor.getFullYear(), i, 1);
+      const btn = document.createElement('button'); btn.type='button'; btn.className='cal-month-btn';
+      btn.textContent = dt.toLocaleDateString(undefined, { month:'long' });
+      btn.addEventListener('click', ()=>{ calAnchor = dt; if (selCalView) selCalView.value='month'; calView='month'; renderCalendar(); });
+      grid.appendChild(btn);
+    }
+    elCalendar.appendChild(grid);
+  }
+
+  function shiftAnchor(dir){
+    const d = new Date(calAnchor);
+    if (calView==='year') d.setFullYear(d.getFullYear()+dir);
+    else if (calView==='week') d.setDate(d.getDate()+7*dir);
+    else d.setMonth(d.getMonth()+dir);
+    calAnchor = d; renderCalendar();
+  }
+
+  if (btnCalPrev) btnCalPrev.addEventListener('click', ()=> shiftAnchor(-1));
+  if (btnCalNext) btnCalNext.addEventListener('click', ()=> shiftAnchor(1));
+  if (btnCalToday) btnCalToday.addEventListener('click', ()=>{ const now = new Date(); calAnchor = now; selectedDay = todayStr(); updateDayBanner(); render(); renderCalendar(); });
+  if (selCalView) selCalView.addEventListener('change', ()=>{ calView = selCalView.value; renderCalendar(); });
+
+  // Initial calendar paint
+  renderCalendar();
 
   // Simple kebab menu management --------------------------------------------
   let openMenuEl = null; let openMenuBtn = null;
