@@ -43,7 +43,7 @@ body{
 .container{max-width:min(1400px,96vw);margin:0 auto;padding:24px clamp(16px,3vw,40px)}
 
 /* Layout grid for content sections */
-.main-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+.main-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:stretch}
 @media (max-width: 980px){ .main-grid{grid-template-columns:1fr} }
 
 .card{background:linear-gradient(180deg, color-mix(in oklab, var(--app-surface, #ffffff), black 2%), var(--app-surface, #ffffff));
@@ -254,3 +254,30 @@ body{
 .cal-month-btn{appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
   border-radius:12px;padding:14px;cursor:pointer;text-align:center}
 .cal-month-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+
+/* Header layout adjustments for Calendar and History */
+#calendar-card .list-header,
+#history-section .list-header{ justify-content:space-between; flex-wrap:wrap; gap:12px }
+#calendar-card .list-controls,
+#history-section .list-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:12px }
+#calendar-card .cal-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:12px }
+
+/* Larger, rounded dropdowns for Calendar/History */
+#cal-view, #history-range{
+  appearance:auto;
+  padding:10px 14px;
+  font-size:1rem;
+  border-radius:14px;
+  border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
+  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
+  color:var(--text,#0f172a);
+  box-shadow:0 6px 18px rgba(0,0,0,.04);
+}
+#cal-view:hover, #history-range:hover{ background:color-mix(in oklab, var(--app-surface,#fff), black 6%) }
+
+/* Segmented buttons (bigger, button-like) */
+.seg{display:inline-flex;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 14%);border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+.seg-btn{appearance:none;border:none;background:transparent;padding:10px 16px;font:600 0.95rem/1 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text,#0f172a);cursor:pointer}
+.seg-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+.seg-btn.active{background:linear-gradient(180deg, var(--app-primary), var(--app-primary-2));color:#fff}
+.seg-btn + .seg-btn{border-left:1px solid color-mix(in oklab, var(--app-surface,#fff), black 10%)}

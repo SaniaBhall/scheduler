@@ -96,10 +96,12 @@
   const btnCalNext = $('#cal-next');
   const btnCalToday = $('#cal-today');
   const selCalView = $('#cal-view');
+  const segCalView = $('#cal-view-seg');
   // History
   const elHistList = $('#history-list');
   const elHistEmpty = $('#history-empty');
   const elHistRange = $('#history-range');
+  const segHistRange = $('#hist-range-seg');
 
   // Filter state
   let viewFilter = 'all'; // 'all' | 'active' | 'completed'
@@ -586,6 +588,7 @@ elForm.addEventListener('submit', (e) => {
   function renderCalendar(){
     if (!elCalendar) return;
     calView = selCalView?.value || calView || 'month';
+    try { setCalSegActive(calView); } catch(_){ }
     const sel = selectedDay || todayStr();
     const today = todayStr();
     const label = (()=>{
@@ -681,10 +684,21 @@ elForm.addEventListener('submit', (e) => {
   if (btnCalPrev) btnCalPrev.addEventListener('click', ()=> shiftAnchor(-1));
   if (btnCalNext) btnCalNext.addEventListener('click', ()=> shiftAnchor(1));
   if (btnCalToday) btnCalToday.addEventListener('click', ()=>{ const now = new Date(); calAnchor = now; selectedDay = todayStr(); updateDayBanner(); render(); renderCalendar(); });
-  if (selCalView) selCalView.addEventListener('change', ()=>{ calView = selCalView.value; renderCalendar(); });
+  if (selCalView) selCalView.addEventListener('change', ()=>{ calView = selCalView.value; try { setCalSegActive(calView); } catch(_){ } renderCalendar(); });
+  if (segCalView) segCalView.addEventListener('click', (e)=>{
+    const target = /** @type {HTMLElement} */(e.target);
+    const btn = target.closest ? target.closest('.seg-btn') : null;
+    if (!btn) return;
+    const v = btn.getAttribute('data-view'); if (!v) return;
+    try { setCalSegActive(v); } catch(_){ }
+    if (selCalView) { selCalView.value = v; selCalView.dispatchEvent(new Event('change', { bubbles:true })); }
+  });
+
+  function setCalSegActive(val){ if (!segCalView) return; $$('.seg-btn', segCalView).forEach(b=>{ b.classList.toggle('active', b.dataset.view===val); }); }
 
   // Initial calendar paint
   renderCalendar();
+  try { setCalSegActive(calView); } catch(_){ }
 
   // Simple kebab menu management --------------------------------------------
   let openMenuEl = null; let openMenuBtn = null;
@@ -807,6 +821,16 @@ elForm.addEventListener('submit', (e) => {
   function dayToDate(day){ const [y,m,d] = day.split('-').map(Number); return new Date(y,(m-1),d); }
   function escapeText(s){ return String(s).replace(/[&<>"']/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch])); }
   if (elHistRange) elHistRange.addEventListener('change', renderHistory);
+  if (segHistRange) segHistRange.addEventListener('click', (e)=>{
+    const target = /** @type {HTMLElement} */(e.target);
+    const btn = target.closest ? target.closest('.seg-btn') : null;
+    if (!btn) return;
+    const v = btn.getAttribute('data-range'); if (!v) return;
+    try { setHistSegActive(v); } catch(_){}
+    if (elHistRange) { elHistRange.value = v; elHistRange.dispatchEvent(new Event('change', { bubbles:true })); }
+  });
+  function setHistSegActive(val){ if (!segHistRange) return; $$('.seg-btn', segHistRange).forEach(b=>{ b.classList.toggle('active', b.dataset.range===val); }); }
+  try { setHistSegActive(elHistRange?.value || '7'); } catch(_){ }
   })();
 
 
