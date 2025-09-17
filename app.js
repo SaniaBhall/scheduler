@@ -72,6 +72,8 @@
   const elStart = $('#start');
   const elEnd = $('#end');
   const elNotes = $('#notes');
+  const elDayFrom = $('#day-from');
+  const elDayTo = $('#day-to');
   const elTitleErr = $('#title-error');
   const elStartErr = $('#start-error');
   const elEndErr = $('#end-error');
@@ -82,6 +84,7 @@
   const elDayFriendly = $('#day-friendly');
   const btnClear = $('#btn-clear');
   const btnMarkAll = $('#mark-all-done');
+  const btnCancel = $('#btn-cancel');
   const btnFilterAll = $('#filter-all');
   const btnFilterActive = $('#filter-active');
   const btnFilterCompleted = $('#filter-completed');
@@ -209,13 +212,10 @@ btnDlgDone.focus();
   let achShownDay = '';
   function render(){
     const day = selectedDay || todayStr();
-    // Show today's tasks plus overdue pending tasks from past days
+    // Show only tasks for the selected day (or today)
     const todays = state.tasks.filter(t => t.day === day);
-    const overdueAct = state.tasks.filter(t => t.status==='pending' && t.day < day);
     const tasks = todays.sort((a,b)=> a.start.localeCompare(b.start));
     const act = tasks.filter(t=>t.status==='pending');
-    // Include overdue pending into Active
-    act.push(...overdueAct);
     const doneOrMissed = tasks.filter(t=>t.status!=='pending');
     elListAct.innerHTML = '';
     elListDone.innerHTML = '';
@@ -225,27 +225,48 @@ btnDlgDone.focus();
     if (viewFilter !== 'completed') for (const t of act){
       const li = document.createElement('li'); li.className = 'task'; li.dataset.id = t.id;
       li.classList.add(t.status==='done'?'is-done':t.status==='missed'?'is-missed':'is-pending');
-      const time = document.createElement('div'); time.className='task-time'; time.textContent = t.start + ' - ' + t.end;
+      const time = document.createElement('div'); time.className='task-time'; time.textContent = `${t.day} · ${t.start} - ${t.end}`;
 
 
       const mid = document.createElement('div');
       const title = document.createElement('div'); title.className='task-title'; title.textContent = t.title;
       const notes = document.createElement('div'); notes.className='task-notes'; if (t.notes) { notes.textContent = t.notes; } else { notes.textContent=''; }
       mid.appendChild(title); if (t.notes) mid.appendChild(notes);
-      li.append(time, mid);
+      const right = document.createElement('div'); right.className='task-actions';
+      const moreWrap = document.createElement('div'); moreWrap.className='more';
+      const moreBtn = document.createElement('button'); moreBtn.className='icon-btn more-btn'; moreBtn.setAttribute('aria-haspopup','menu'); moreBtn.setAttribute('aria-expanded','false'); moreBtn.setAttribute('aria-label','Open menu'); moreBtn.textContent = '...';
+      const menu = document.createElement('div'); menu.className='menu'; menu.setAttribute('role','menu'); menu.hidden = true;
+      const add = (label, onClick) => { const b = document.createElement('button'); b.type='button'; b.className='menu-item'; b.setAttribute('role','menuitem'); b.textContent = label; b.addEventListener('click', (ev)=>{ ev.stopPropagation(); onClick(); closeMenu(menu, moreBtn); }); menu.appendChild(b); };
+      if (t.status === 'pending') add('Done', ()=> markDone(t.id));
+      add('Edit', ()=> editTask(t.id));
+      add('Reschedule', ()=> promptReschedule(t.id));
+      add('Delete', ()=> delTask(t.id));
+      moreWrap.append(moreBtn, menu);
+      right.appendChild(moreWrap);
+      li.append(time, mid, right);
       elListAct.appendChild(li);
     }
 
     if (viewFilter !== 'active') for (const t of doneOrMissed){
       const li = document.createElement('li'); li.className = 'task'; li.dataset.id = t.id;
       li.classList.add(t.status==='done'?'is-done':t.status==='missed'?'is-missed':'is-pending');
-      const time = document.createElement('div'); time.className='task-time'; time.textContent = t.start + ' - ' + t.end;
+      const time = document.createElement('div'); time.className='task-time'; time.textContent = `${t.day} · ${t.start} - ${t.end}`;
 
       const mid = document.createElement('div');
       const title = document.createElement('div'); title.className='task-title'; title.textContent = t.title;
       const notes = document.createElement('div'); notes.className='task-notes'; if (t.notes) notes.textContent = t.notes;
       mid.appendChild(title); if (t.notes) mid.appendChild(notes);
-      li.append(time, mid);
+      const right = document.createElement('div'); right.className='task-actions';
+      const moreWrap = document.createElement('div'); moreWrap.className='more';
+      const moreBtn = document.createElement('button'); moreBtn.className='icon-btn more-btn'; moreBtn.setAttribute('aria-haspopup','menu'); moreBtn.setAttribute('aria-expanded','false'); moreBtn.setAttribute('aria-label','Open menu'); moreBtn.textContent = '...';
+      const menu = document.createElement('div'); menu.className='menu'; menu.setAttribute('role','menu'); menu.hidden = true;
+      const add = (label, onClick) => { const b = document.createElement('button'); b.type='button'; b.className='menu-item'; b.setAttribute('role','menuitem'); b.textContent = label; b.addEventListener('click', (ev)=>{ ev.stopPropagation(); onClick(); closeMenu(menu, moreBtn); }); menu.appendChild(b); };
+      add('Edit', ()=> editTask(t.id));
+      add('Reschedule', ()=> promptReschedule(t.id));
+      add('Delete', ()=> delTask(t.id));
+      moreWrap.append(moreBtn, menu);
+      right.appendChild(moreWrap);
+      li.append(time, mid, right);
       elListDone.appendChild(li);
     }
 
@@ -266,14 +287,9 @@ btnDlgDone.focus();
     const pct = total? (done/total) : 0;
     ringFg.style.strokeDasharray = `${C}`;
     ringFg.style.strokeDashoffset = String(C * (1 - pct));
-    // Ring background: amber if there are any tasks (today or overdue active), else light grey
-    const anyActiveOrPlanned = total > 0 || overdueAct.length > 0;
+    // Ring background: amber if there are any tasks for the day, else light grey
+    const anyActiveOrPlanned = total > 0;
     try { document.documentElement.style.setProperty('--ring-bg', anyActiveOrPlanned ? '#ffcc66' : '#e5e7eb'); } catch(_){ }
-    // If no today tasks but there are overdue active, reflect count in denom to signal attention
-    if (total === 0 && overdueAct.length > 0) {
-      elProgNum.textContent = '0';
-      elProgDen.textContent = String(overdueAct.length);
-    }
     // Dynamic ring color (red -> yellow -> green)
     let color = getProgressColor(pct);
     ringFg.style.stroke = color;
@@ -483,7 +499,10 @@ function editTask(id){
   // Event handlers -----------------------------------------------------------
 elForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const day = selectedDay || todayStr();
+    const df = elDayFrom?.value || (selectedDay || todayStr());
+    const dt = elDayTo?.value || df;
+    let dayFrom = df, dayTo = dt;
+    if (dayTo < dayFrom) { showToast('"Date To" must be on or after "Date From".'); return; }
     const title = String(elTitle.value||'').slice(0,120);
     const start = String(elStart.value||'');
     const end = String(elEnd.value||'');
@@ -494,17 +513,23 @@ elForm.addEventListener('submit', (e) => {
     elStartErr.textContent = '';
     elEndErr.textContent = '';
     if (editing) {
-      const errs = validateForm(day, title, start, end); setFieldErrors(errs);
+      const errs = validateForm(dayFrom, title, start, end); setFieldErrors(errs);
       if (errs.title || errs.start || errs.end) return;
-      updateTask(editing, { title: title.trim(), day, start, end, notes });
+      updateTask(editing, { title: title.trim(), day: dayFrom, start, end, notes });
       elForm.dataset.editing = '';
       elForm.reset();
       return;
     }
-    addTask({ title, day, start, end, notes });
+    // Add one task per day in [dayFrom..dayTo]
+    // Use local date math to avoid timezone shifts
+    const inc = (s) => { const [y,m,d] = s.split('-').map(Number); const t = new Date(y,(m-1),d); t.setDate(t.getDate()+1); return (t.getFullYear()+ '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0')); };
+    let cur = dayFrom;
+    while (cur <= dayTo) { addTask({ title, day: cur, start, end, notes }); cur = inc(cur); }
   });
-  btnClear.addEventListener('click', () => { elForm.reset(); elTitleErr.textContent=''; elTitle.focus(); });
-  if (elDay) elDay.addEventListener('change', () => { selectedDay = elDay.value || todayStr(); updateDayBanner(); render(); });
+  if (btnClear) btnClear.addEventListener('click', () => { elForm.reset(); elTitleErr.textContent=''; elTitle.focus(); });
+  if (btnCancel) btnCancel.addEventListener('click', () => { elForm.dataset.editing=''; elForm.reset(); elTitleErr.textContent=''; elStartErr.textContent=''; elEndErr.textContent=''; });
+  if (elDayFrom) elDayFrom.addEventListener('change', () => { selectedDay = elDayFrom.value || todayStr(); if (elDayTo && !elDayTo.value) elDayTo.value = selectedDay; updateDayBanner(); render(); });
+  if (elDayTo) elDayTo.addEventListener('change', () => { /* keep UI responsive; no-op */ });
 
   btnMarkAll.addEventListener('click', () => {
     const day = selectedDay || todayStr();
@@ -551,6 +576,8 @@ elForm.addEventListener('submit', (e) => {
   function initDay(){
     selectedDay = todayStr();
     if (elDay) elDay.value = selectedDay;
+    if (elDayFrom) elDayFrom.value = selectedDay;
+    if (elDayTo) elDayTo.value = selectedDay;
   }
 
   load();
@@ -638,7 +665,7 @@ elForm.addEventListener('submit', (e) => {
       const hasTasks = state.tasks.some(t=>t.day===dayStr);
       if (hasTasks) btn.classList.add('has-tasks');
       const num = document.createElement('div'); num.className='cal-num'; num.textContent= String(dt.getDate()); btn.appendChild(num);
-      btn.addEventListener('click', ()=>{ selectedDay = dayStr; calAnchor = dt; updateDayBanner(); render(); renderCalendar(); });
+      btn.addEventListener('click', ()=>{ selectedDay = dayStr; calAnchor = dt; if (elDayFrom) elDayFrom.value = selectedDay; if (elDayTo) elDayTo.value = selectedDay; updateDayBanner(); render(); renderCalendar(); });
       grid.appendChild(btn);
     }
     elCalendar.appendChild(grid);
@@ -655,7 +682,7 @@ elForm.addEventListener('submit', (e) => {
       if (dayStr === (selectedDay||'')) btn.classList.add('is-selected');
       const label = dt.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
       btn.textContent = label;
-      btn.addEventListener('click', ()=>{ selectedDay = dayStr; calAnchor = dt; updateDayBanner(); render(); renderCalendar(); });
+      btn.addEventListener('click', ()=>{ selectedDay = dayStr; calAnchor = dt; if (elDayFrom) elDayFrom.value = selectedDay; if (elDayTo) elDayTo.value = selectedDay; updateDayBanner(); render(); renderCalendar(); });
       grid.appendChild(btn);
     }
     elCalendar.appendChild(grid);
@@ -700,28 +727,18 @@ elForm.addEventListener('submit', (e) => {
   renderCalendar();
   try { setCalSegActive(calView); } catch(_){ }
 
+  
+
   // Simple kebab menu management --------------------------------------------
   let openMenuEl = null; let openMenuBtn = null;
-    function closeMenu(menu, btn){ if (!menu) return; menu.hidden = true; menu.style.position=''; menu.style.left=''; menu.style.top=''; menu.style.zIndex=''; btn?.setAttribute('aria-expanded','false'); if (openMenuEl===menu) { openMenuEl=null; openMenuBtn=null; } }
+    function closeMenu(menu, btn){ if (!menu) return; menu.hidden = true; menu.style.visibility=''; btn?.setAttribute('aria-expanded','false'); try { btn.closest('.task')?.classList.remove('menu-open'); } catch(_){} if (openMenuEl===menu) { openMenuEl=null; openMenuBtn=null; } }
     function openMenu(menu, btn){
       if (openMenuEl && openMenuEl!==menu) closeMenu(openMenuEl, openMenuBtn);
-      // Make it measurable off-screen
-      menu.hidden=false; menu.style.visibility='hidden'; menu.classList.remove('open-up');
-      // Position as fixed overlay centered on the button horizontally
-      try {
-        const br = btn.getBoundingClientRect();
-        menu.style.position = 'fixed';
-        menu.style.zIndex = '100000';
-        const mw = menu.offsetWidth || 180;
-        const mh = menu.offsetHeight || 160;
-        let left = Math.min(Math.max(16, br.left + br.width - mw), window.innerWidth - mw - 16);
-        let top = br.bottom + 8;
-        if (window.innerHeight - br.bottom < mh + 16) { top = br.top - mh - 8; menu.classList.add('open-up'); }
-        menu.style.left = left + 'px';
-        menu.style.top = top + 'px';
-      } catch(_){ }
-      menu.style.visibility='visible';
-      btn?.setAttribute('aria-expanded','true'); openMenuEl = menu; openMenuBtn = btn;
+      // Show and let CSS position it relative to the kebab
+      menu.hidden=false; menu.style.visibility='visible'; menu.classList.remove('open-up');
+      try { adjustMenuDirection(menu, btn); } catch(_){ }
+      btn?.setAttribute('aria-expanded','true'); try { btn.closest('.task')?.classList.add('menu-open'); } catch(_){}
+      openMenuEl = menu; openMenuBtn = btn;
     }
   function toggleMenu(menu, btn){ if (menu.hidden) openMenu(menu, btn); else closeMenu(menu, btn); }
       document.addEventListener('click', (e)=>{
@@ -774,6 +791,7 @@ elForm.addEventListener('submit', (e) => {
         updateTask(id, { start, end, status:'pending' });
       });
     }
+    // quick-add removed
 
   // History rendering --------------------------------------------------------
   function renderHistory(){
@@ -832,6 +850,8 @@ elForm.addEventListener('submit', (e) => {
   function setHistSegActive(val){ if (!segHistRange) return; $$('.seg-btn', segHistRange).forEach(b=>{ b.classList.toggle('active', b.dataset.range===val); }); }
   try { setHistSegActive(elHistRange?.value || '7'); } catch(_){ }
   })();
+
+
 
 
 

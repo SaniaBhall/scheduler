@@ -1,4 +1,4 @@
-﻿:root{
+:root{
   /* App palette */
   --app-muted: #a8b0c2;
   --app-primary: #8b5cf6;  /* violet */
@@ -150,6 +150,9 @@ body{
 .task::before{content:"";position:absolute;left:-15px;top:22px;width:10px;height:10px;border-radius:50%;background:var(--app-primary);box-shadow:0 0 0 6px color-mix(in oklab, var(--app-primary), transparent 85%)}
 .task{position:relative}
 .task:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.06)}
+/* Prevent hover-lift jitter/blur while the kebab menu is open */
+.task.menu-open, .task.menu-open:hover{ transform:none; }
+.task.menu-open{ z-index: 2; }
 .task-time{font-variant-numeric:tabular-nums;color:var(--app-muted);min-width:120px}
 .task-title{font-weight:600}
 .task-notes{color:var(--app-muted);font-size:.9rem}
@@ -182,6 +185,56 @@ body{
 /* Completed section persistent glow */
 #completed-sub.glow-section{animation: section-glow 8s ease-in-out infinite}
 @keyframes section-glow{ 0%{box-shadow:0 0 0 rgba(139,92,246,.0)} 50%{box-shadow:0 12px 40px rgba(34,211,238,.16)} 100%{box-shadow:0 0 0 rgba(139,92,246,.0)} }
+
+/* Calendar header overrides and segmented view buttons */
+#calendar-card .list-header{ justify-content:space-between; flex-wrap:wrap; gap:12px }
+#calendar-card .list-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:12px }
+#calendar-card .cal-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:12px }
+.cal-view-wrap{ margin-left:auto; display:flex; align-items:center; gap:8px }
+select.btn.btn-small.cal-select{
+  padding:8px 12px;
+  border-radius:999px;
+  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
+  border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
+  box-shadow:0 6px 18px rgba(0,0,0,.04);
+}
+select.btn.btn-small.cal-select:hover{ background:color-mix(in oklab, var(--app-surface,#fff), black 6%) }
+/* Add chevron to view dropdown */
+#cal-view.cal-select{
+  -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230f172a' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; background-size:12px 8px; padding-right:28px;
+}
+.seg{display:inline-flex;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 14%);border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+.seg-btn{appearance:none;border:none;background:transparent;padding:10px 16px;font:600 0.95rem/1 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text,#0f172a);cursor:pointer}
+.cal-nav .seg-btn{ padding:8px 12px }
+.seg-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+.seg-btn.active{background:linear-gradient(180deg, var(--app-primary), var(--app-primary-2));color:#fff}
+.seg-btn + .seg-btn{border-left:1px solid color-mix(in oklab, var(--app-surface,#fff), black 10%)}
+
+/* Calendar grid */
+.calendar{margin-top:10px}
+.cal-month{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-weekday{font-size:.85rem;color:var(--app-muted);text-align:center;padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(44px,1fr));gap:6px}
+.cal-cell{position:relative;appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
+  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);border-radius:10px;padding:8px 10px;min-height:64px;text-align:right;cursor:pointer}
+.cal-cell:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+.cal-cell.is-outside{opacity:.55}
+.cal-cell.is-today{outline:2px solid color-mix(in oklab, var(--app-primary), transparent 40%)}
+.cal-cell.is-selected{border-color:color-mix(in oklab, var(--app-primary), transparent 35%);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.cal-cell .cal-num{font-weight:600}
+.cal-cell.has-tasks::after{content:"";position:absolute;left:10px;bottom:8px;width:8px;height:8px;border-radius:50%;background:var(--app-primary)}
+.cal-week{display:grid;grid-template-columns:repeat(7,minmax(44px,1fr));gap:6px}
+.cal-day{position:relative;appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
+  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);border-radius:10px;padding:10px;cursor:pointer;text-align:center;min-height:56px}
+.cal-day:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
+.cal-day.is-today{outline:2px solid color-mix(in oklab, var(--app-primary), transparent 40%)}
+.cal-day.is-selected{border-color:color-mix(in oklab, var(--app-primary), transparent 35%);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.cal-year{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cal-month-btn{appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
+  border-radius:12px;padding:14px;cursor:pointer;text-align:center}
+.cal-month-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
 
 .achievement{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);}
 .achievement[hidden]{display:none}
@@ -226,58 +279,3 @@ body{
 .time-dropdown{position:fixed;z-index:100000;max-height:180px;overflow:auto;min-width:120px;background:#fff;border:1px solid color-mix(in oklab,#ffffff,black 14%);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.16);padding:6px}
 .time-dropdown button{display:block;width:100%;text-align:left;border:none;background:transparent;padding:6px 8px;border-radius:8px;font:inherit;color:#0f172a;cursor:pointer}
 .time-dropdown button:hover,.time-dropdown button[aria-selected="true"]{background:color-mix(in oklab,#ffffff,black 6%)}
-
-/* Kebab menu: fit to content and prevent viewport fill */
-.menu{ right:auto; left:auto; top:auto; bottom:auto; position:fixed; width:max-content; min-width:unset; max-width:min(240px, 90vw); white-space:nowrap; }
-.menu.open-up{ bottom:auto; }
-
-/* Calendar -------------------------------------------------------------- */
-.calendar{margin-top:10px}
-.cal-month{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-weekday{font-size:.8rem;color:var(--app-muted);text-align:center;padding:4px 0}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-cell{position:relative;appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
-  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);border-radius:10px;padding:8px 10px;text-align:right;cursor:pointer;min-height:44px}
-.cal-cell:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
-.cal-cell.is-outside{opacity:.55}
-.cal-cell.is-today{outline:2px solid color-mix(in oklab, var(--app-primary), transparent 40%)}
-.cal-cell.is-selected{border-color:color-mix(in oklab, var(--app-primary), transparent 35%);box-shadow:0 6px 18px rgba(0,0,0,.08)}
-.cal-cell .cal-num{font-weight:600}
-.cal-cell.has-tasks::after{content:"";position:absolute;left:10px;bottom:8px;width:8px;height:8px;border-radius:50%;background:var(--app-primary)}
-.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-day{position:relative;appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
-  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);border-radius:10px;padding:10px;cursor:pointer;text-align:center}
-.cal-day:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
-.cal-day.is-today{outline:2px solid color-mix(in oklab, var(--app-primary), transparent 40%)}
-.cal-day.is-selected{border-color:color-mix(in oklab, var(--app-primary), transparent 35%);box-shadow:0 6px 18px rgba(0,0,0,.08)}
-.cal-year{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cal-month-btn{appearance:none;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
-  border-radius:12px;padding:14px;cursor:pointer;text-align:center}
-.cal-month-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
-
-/* Header layout adjustments for Calendar and History */
-#calendar-card .list-header,
-#history-section .list-header{ justify-content:space-between; flex-wrap:wrap; gap:12px }
-#calendar-card .list-controls,
-#history-section .list-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:12px }
-#calendar-card .cal-controls{ display:flex; flex-wrap:wrap; align-items:center; gap:12px }
-
-/* Larger, rounded dropdowns for Calendar/History */
-#cal-view, #history-range{
-  appearance:auto;
-  padding:10px 14px;
-  font-size:1rem;
-  border-radius:14px;
-  border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 12%);
-  background:color-mix(in oklab, var(--app-surface,#fff), black 2%);
-  color:var(--text,#0f172a);
-  box-shadow:0 6px 18px rgba(0,0,0,.04);
-}
-#cal-view:hover, #history-range:hover{ background:color-mix(in oklab, var(--app-surface,#fff), black 6%) }
-
-/* Segmented buttons (bigger, button-like) */
-.seg{display:inline-flex;border:1px solid color-mix(in oklab, var(--app-surface,#fff), black 14%);border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.04)}
-.seg-btn{appearance:none;border:none;background:transparent;padding:10px 16px;font:600 0.95rem/1 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text,#0f172a);cursor:pointer}
-.seg-btn:hover{background:color-mix(in oklab, var(--app-surface,#fff), black 6%)}
-.seg-btn.active{background:linear-gradient(180deg, var(--app-primary), var(--app-primary-2));color:#fff}
-.seg-btn + .seg-btn{border-left:1px solid color-mix(in oklab, var(--app-surface,#fff), black 10%)}
